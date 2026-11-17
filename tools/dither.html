@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macintosh Photo Dither</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: clamp(12px, 4vw, 48px); background: repeating-conic-gradient(#d2d2d2 0 25%, #eee 0 50%) 0 0 / 4px 4px; color: #141414; font: 15px/1.6 system-ui, sans-serif; }
+  main { max-width: 810px; margin: auto; background: white; border: 1px solid; box-shadow: 3px 3px #141414; }
+  header { padding: 8px 12px; border-bottom: 1px solid; display: flex; align-items: center; gap: 10px; }
+  header::before, header::after { content: ""; flex: 1; height: 12px; background: repeating-linear-gradient(#141414 0 1px, white 1px 3px); }
+  h1 { text-align: center; margin: 0; font: bold clamp(15px, 3vw, 21px)/1.2 "Courier New", monospace; }
+  .body { padding: clamp(13px, 4vw, 30px); }
+  p { margin: 0 0 16px; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  label { display: grid; gap: 3px; min-width: 0; font-weight: 600; }
+  .choose { grid-column: 1 / -1; }
+  input, select, button { max-width: 100%; font: inherit; accent-color: #151515; }
+  input[type=number], select, button { padding: 5px 8px; background: white; color: #141414; border: 1px solid; }
+  button { font-weight: 700; box-shadow: 2px 2px #141414; cursor: pointer; }
+  .status { margin: 14px 0 6px; color: #454545; }
+  canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: 64vh; margin-bottom: 14px; border: 1px solid; image-rendering: pixelated; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Macintosh Photo Dither</h1></header>
+  <div class="body">
+    <p>Turn a photo into a black-and-white PNG. The conversion runs in this browser tab.</p>
+    <div class="controls">
+      <label class="choose">Photo <input type="file" id="source" accept="image/*"></label>
+      <label>Pattern
+        <select id="pattern">
+          <option value="ordered">Ordered (Bayer)</option>
+          <option value="atkinson">Atkinson</option>
+          <option value="diffusion">Floyd–Steinberg</option>
+          <option value="threshold">Solid black and white</option>
+        </select>
+      </label>
+      <label>Longest edge (px) <input id="edge" type="number" min="32" max="2048" value="512" step="1"></label>
+      <label>Brightness <input id="brightness" type="range" min="-100" max="100" value="0"></label>
+      <label>Contrast <input id="contrast" type="range" min="50" max="200" value="100"></label>
+    </div>
+    <p id="status" class="status" role="status">Choose an image to preview it.</p>
+    <canvas id="preview" aria-label="Black-and-white image preview" hidden></canvas>
+    <button id="save" type="button" hidden>Download PNG</button>
+  </div>
+</main>
+<script>
+(() => {
+  const input = document.querySelector('#source');
+  const pattern = document.querySelector('#pattern');
+  const edge = document.querySelector('#edge');
+  const brightness = document.querySelector('#brightness');
+  const contrast = document.querySelector('#contrast');
+  const status = document.querySelector('#status');
+  const canvas = document.querySelector('#preview');
+  const save = document.querySelector('#save');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  let original;
+  let filename;
+  let revision = 0;
+
+  function render() {
+    if (!original) return;
+    const limit = Math.max(32, Math.min(2048, Number(edge.value) || 512));
+    const scale = Math.min(1, limit / Math.max(original.naturalWidth, original.naturalHeight));
+    const width = canvas.width = Math.max(1, Math.round(original.naturalWidth * scale));
+    const height = canvas.height = Math.max(1, Math.round(original.naturalHeight * scale));
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(original, 0, 0, width, height);
+    const pixels = ctx.getImageData(0, 0, width, height);
+    const levels = new Float32Array(width * height);
+    const gain = Number(contrast.value) / 100;
+    const offset = Number(brightness.value);
+    for (let i = 0; i < levels.length; i++) {
+      const j = i * 4;
+      const luminance = .2126 * pixels.data[j] + .7152 * pixels.data[j + 1] + .0722 * pixels.data[j + 2];
+      levels[i] = Math.max(0, Math.min(255, (luminance - 128) * gain + 128 + offset));
+    }
+    const mode = pattern.value;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = y * width + x;
+        const threshold = mode === 'ordered' ? (bayer[(y % 4) * 4 + x % 4] + .5) * 16 : 128;
+        const value = levels[i] >= threshold ? 255 : 0;
+        const j = 4 * i;
+        pixels.data[j] = pixels.data[j + 1] = pixels.data[j + 2] = value;
+        if (mode === 'diffusion') {
+          const error = (levels[i] - value) / 16;
+          if (x + 1 < width) levels[i + 1] += 7 * error;
+          if (y + 1 < height) {
+            if (x > 0) levels[i + width - 1] += 3 * error;
+            levels[i + width] += 5 * error;
+            if (x + 1 < width) levels[i + width + 1] += error;
+          }
+        } else if (mode === 'atkinson') {
+          // Pass one eighth of the error to each of six neighbors.
+          const error = (levels[i] - value) / 8;
+          if (x + 1 < width) levels[i + 1] += error;
+          if (x + 2 < width) levels[i + 2] += error;
+          if (y + 1 < height) {
+            if (x > 0) levels[i + width - 1] += error;
+            levels[i + width] += error;
+            if (x + 1 < width) levels[i + width + 1] += error;
+          }
+          if (y + 2 < height) levels[i + 2 * width] += error;
+        }
+      }
+    }
+    ctx.putImageData(pixels, 0, 0);
+    canvas.hidden = save.hidden = false;
+    status.textContent = width + ' × ' + height + ' px';
+  }
+
+  input.addEventListener('change', async () => {
+    const imageFile = input.files[0];
+    const current = ++revision;
+    original = undefined;
+    canvas.hidden = save.hidden = true;
+    if (!imageFile) {
+      status.textContent = 'Choose an image to preview it.';
+      return;
+    }
+    status.textContent = 'Reading image…';
+    const sourceURL = URL.createObjectURL(imageFile);
+    const image = new Image();
+    image.src = sourceURL;
+    try {
+      await image.decode();
+      if (current !== revision) return;
+      original = image;
+      filename = imageFile.name.replace(/\.[^.]+$/, '');
+      render();
+    } catch {
+      if (current === revision) status.textContent = 'This browser could not open that image. Try a JPG, PNG, or WebP.';
+    } finally {
+      URL.revokeObjectURL(sourceURL);
+    }
+  });
+
+  [pattern, edge, brightness, contrast].forEach(control => control.addEventListener('input', render));
+  save.addEventListener('click', () => {
+    const basename = filename;
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = (basename || 'photo') + '-mac.png';
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  });
+})();
+</script>
+</body>
+</html>

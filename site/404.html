@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>404: Page Not Found</title>
+  <link rel="icon" href="/assets/icons/system.png" type="image/png">
+  <style>
+    @font-face {
+      font-family: "ChicagoFLF";
+      src: url("/assets/fonts/ChicagoFLF.woff2") format("woff2");
+      font-display: swap;
+      font-style: normal;
+      font-weight: 400;
+    }
+
+    :root {
+      color-scheme: light;
+      --ink: #000;
+      --paper: #fff;
+      --desktop-stipple: conic-gradient(#000 25%, #fff 0 50%, #000 0 75%, #fff 0) 0 0 / 4px 4px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--desktop-stipple);
+      font-family: "ChicagoFLF", Chicago, monospace;
+      font-synthesis: none;
+      -webkit-font-smoothing: none;
+    }
+
+    main {
+      position: fixed;
+      inset: 0;
+      text-align: center;
+    }
+
+    .dead-mac {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 32px;
+      height: 32px;
+      transform: translate(-50%, -50%);
+      image-rendering: pixelated;
+    }
+
+    h1 {
+      position: absolute;
+      top: calc(50% + 24px);
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 2px 4px;
+      background: var(--paper);
+      font: 400 12px/1 "ChicagoFLF", Chicago, monospace;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="dead-mac" src="/assets/icons/sad-macintosh.png" width="32" height="32" alt="Sad Macintosh">
+    <h1>404: page not found</h1>
+  </main>
+</body>
+</html>

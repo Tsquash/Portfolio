@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Caleb Lightfoot's portfolio">
+  <title>Caleb Lightfoot — Portfolio</title>
+  <link rel="icon" href="assets/icons/system.png" type="image/png">
+  <link rel="preload" href="assets/fonts/ChicagoFLF.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    try {
+      if (!sessionStorage.getItem('macintosh-portfolio-desktop-v1')) {
+        document.documentElement.classList.add('boot-required');
+      }
+    } catch {
+      document.documentElement.classList.add('boot-required');
+    }
+  </script>
+  <link rel="stylesheet" href="desktop.css">
+  <script src="photo-albums.js" defer></script>
+  <script src="content.js" defer></script>
+  <script src="desktop.js" defer></script>
+</head>
+<body>
+  <div class="startup-screen" id="startup-screen" data-phase="happy" role="status" aria-label="Starting Macintosh">
+    <div class="startup-happy-mac" aria-hidden="true"></div>
+    <div class="startup-welcome-panel" aria-hidden="true">
+      <span>Welcome to my space</span>
+    </div>
+  </div>
+
+  <header class="menu-bar">
+    <nav class="menus" aria-label="Desktop menus">
+      <details>
+        <summary aria-label="Portfolio menu"><img src="assets/icons/menu-profile.png" width="16" height="16" alt=""></summary>
+        <div class="menu-panel">
+          <button type="button" data-open="about">Welcome!</button>
+          <a href="https://github.com/Tsquash" target="_blank" rel="noopener noreferrer">GitHub Profile ↗</a>
+        </div>
+      </details>
+      <details>
+        <summary>File</summary>
+        <div class="menu-panel">
+          <button type="button" data-command="open">Open Selected <small>Enter</small></button>
+          <button type="button" data-command="close">Close Window</button>
+          <hr>
+          <button type="button" data-open="projects">Projects</button>
+          <button type="button" data-open="photos">Photos</button>
+        </div>
+      </details>
+      <details>
+        <summary>View</summary>
+        <div class="menu-panel">
+          <button type="button" data-command="icons" aria-pressed="true">as Icons</button>
+          <button type="button" data-command="list" aria-pressed="false">as List</button>
+        </div>
+      </details>
+      <details>
+        <summary>Special</summary>
+        <div class="menu-panel">
+          <button type="button" data-command="desktop">Show Desktop</button>
+          <button type="button" data-command="reset">Restore Startup Windows</button>
+        </div>
+      </details>
+    </nav>
+    <div class="menu-end">
+      <time id="clock"></time>
+    </div>
+  </header>
+
+  <main id="desktop" class="desktop" aria-label="Portfolio desktop">
+    <nav class="desktop-personal-items" id="desktop-personal-items" aria-label="Personal desktop icons"></nav>
+    <nav class="desktop-items" id="desktop-items" aria-label="Desktop icons"></nav>
+    <div class="task-switcher" id="task-switcher" aria-label="Open windows" hidden></div>
+    <noscript>
+      <div class="no-script">
+        <h1>Caleb Lightfoot</h1>
+        <p>Electrical and Computer Engineering at UT Austin</p>
+        <p>Enable JavaScript to explore the portfolio desktop.</p>
+        <a href="https://github.com/Tsquash">GitHub Profile</a>
+      </div>
+    </noscript>
+  </main>
+
+  <template id="window-template">
+    <section class="window" role="region" tabindex="-1">
+      <header class="titlebar">
+        <button class="close-box" type="button"></button>
+        <div class="title-stripes"></div>
+        <h2></h2>
+        <div class="title-stripes"></div>
+        <button class="zoom-box" type="button" aria-pressed="false"></button>
+      </header>
+      <div class="window-status"></div>
+      <div class="window-body"></div>
+      <footer class="window-footer">
+        <span></span>
+        <i aria-hidden="true"></i>
+      </footer>
+    </section>
+  </template>
+</body>
+</html>
