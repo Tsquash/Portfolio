@@ -226,6 +226,11 @@
     const check = element('div', 'receipt-turnstile');
     const status = element('p', 'receipt-send-status');
     status.setAttribute('role', 'status');
+    const showStatus = text => {
+      status.textContent = text;
+      const dialog = body.closest('.window');
+      if (dialog) dialog.style.height = 'min(260px, calc(100% - 22px))';
+    };
     const send = element('button', 'image-button receipt-submit', 'Send');
     send.type = 'submit';
     send.disabled = true;
@@ -247,7 +252,7 @@
         checkLabel.hidden = true;
         send.hidden = true;
       } catch (error) {
-        status.textContent = error.message;
+        showStatus(error.message);
         send.disabled = !check.dataset.token;
         if (window.turnstile && check.dataset.widgetId !== undefined) {
           window.turnstile.reset(check.dataset.widgetId);
@@ -257,8 +262,9 @@
     });
     const config = window.receiptNoteConfig || {};
     if (!config.turnstileSiteKey) {
-      status.textContent = 'Receipt notes are not configured yet.';
-      return body.append(form);
+      body.append(form);
+      showStatus('Receipt notes are not configured yet.');
+      return;
     }
     loadTurnstile().then(turnstile => {
       check.dataset.widgetId = turnstile.render(check, {
@@ -271,9 +277,9 @@
           delete check.dataset.token;
           send.disabled = true;
         },
-        'error-callback': () => { status.textContent = 'The anti-spam check could not load. Please try again.'; }
+        'error-callback': () => { showStatus('The anti-spam check could not load. Please try again.'); }
       });
-    }).catch(error => { status.textContent = error.message; });
+    }).catch(error => { showStatus(error.message); });
     body.append(form);
   }
 
@@ -510,7 +516,7 @@
   }));
   define('viewer', { title: 'Photo Viewer', width: 640, height: 465, render: renderViewer });
   define('note', { title: 'Note Print', width: 290, height: 142, className: 'receipt-note-window', render: renderReceiptNote });
-  define('receipt-send', { title: 'Print Note', status: '', context: 'Anti-Spam Check', width: 390, height: 260, className: 'receipt-send-window', render: renderReceiptSend });
+  define('receipt-send', { title: 'Print Note', status: '', context: 'Anti-Spam Check', width: 390, height: 232, className: 'receipt-send-window', render: renderReceiptSend });
   content.projects.forEach(project => define(project.id, {
     title: project.name, status: 'Embedded systems', context: countLabel(project.parts.length, 'repository', 'repositories'),
     width: 610, height: 485, render: body => renderProject(body, project)
@@ -573,7 +579,8 @@
       if (!win) return;
       if (Number.isFinite(saved.width) && Number.isFinite(saved.height)) {
         win.style.width = 'min(' + saved.width + 'px, calc(100% - 22px))';
-        win.style.height = 'min(' + saved.height + 'px, calc(100% - 22px))';
+        const height = saved.id === 'receipt-send' && saved.height === 260 ? 232 : saved.height;
+        win.style.height = 'min(' + height + 'px, calc(100% - 22px))';
       }
       if (saved.id === 'photos' && saved.folder) {
         navigatePhotos(win.querySelector('.window-body'), saved.folder);

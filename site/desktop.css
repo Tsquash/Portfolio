@@ -247,6 +247,8 @@ img { display: block; max-width: 100%; }
 .receipt-send-form { display: grid; gap: 12px; }
 .receipt-send-message, .receipt-send-status { margin: 0; font: 12px/1.35 var(--type); }
 .receipt-send-status { min-height: 16px; }
+.receipt-send-status:empty { display: none; }
+.receipt-submit { margin-right: 10px; }
 .receipt-check-label { display: flex; align-items: center; gap: 5px; margin: 0; font-size: 11px; }
 .receipt-check-label img { width: 51px; height: 12px; image-rendering: pixelated; }
 .receipt-turnstile { min-height: 65px; }
