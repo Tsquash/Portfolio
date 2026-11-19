@@ -6,6 +6,6 @@
  * or any other credential here.
  */
 window.receiptNoteConfig = {
-  endpoint: '',
-  turnstileSiteKey: ''
+  endpoint: 'https://portfolio-receipt-relay.caleblightfoot.workers.dev',
+  turnstileSiteKey: '0x4AAAAAAGH_aFflEOBN7UQq'
 };

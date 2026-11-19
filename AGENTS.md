@@ -6,7 +6,7 @@ Read this first. This is the durable operating guide for agents working on the p
 
 - Dependency-free static site in `site/`; no package manager, framework, build step, or automated test suite.
 - Classic monochrome Macintosh desktop UI. It boots on a visitor's first load in a browser session, then restores open windows, positions, sizes, view mode, and photo state from `sessionStorage`.
-- Desktop and menu items expose Projects, Welcome/About, Resume, GitHub, LinkedIn, Media, Instagram, and Spotify.
+- Desktop and menu items expose Projects, Welcome/About, Resume, GitHub, LinkedIn, Media, Instagram, Spotify, and a Message Slip receipt-note composer. Special → Send a Note… opens the same composer.
 - Current content is one Air Quality Monitor project, six generated photo albums (51 images), and two native-video-player windows (`Monadnock.mp4` and `Dandelion.mp4`).
 - Mouse users select with one click and open with two; touch and keyboard activation open with one action.
 - At widths up to 700 px, windows use the compact/mobile layout and only the active window is normally visible.
@@ -20,6 +20,7 @@ Read this first. This is the durable operating guide for agents working on the p
 | `site/desktop.js` | Window definitions/renderers, desktop icons, interactions, startup, persistence, responsive behavior |
 | `site/desktop.css` | All site styling; mobile breakpoint is `700px` |
 | `site/index.html` | Page metadata, script order, menu markup, desktop/window shell |
+| `site/receipt-note-client.js`, `site/receipt-note-config.js` | Public receipt relay submission API and public endpoint/Turnstile configuration |
 | `site/assets/Photos/<album>/` | Album images; each immediate subdirectory is an album |
 | `site/photo-albums.js` | Generated album manifest; never hand-edit |
 | `tools/generate_photo_albums.py` | Manifest generator and supported image extensions |
@@ -61,6 +62,7 @@ Preserve keyboard operation, coarse-pointer behavior, focus handling, window bou
 
 - The optional receipt-note feature is split from the static site: `receipt-relay/` contains a Cloudflare Worker/D1 relay and Pi poller reference. `site/receipt-note-client.js` exposes `window.submitReceiptNote(note, turnstileToken)` for UI code, while `site/receipt-note-config.js` holds only public Worker URL and Turnstile site-key configuration.
 - Never place Pi or Worker secret values in `site/`. The Pi must poll the relay outbound over HTTPS; do not open a home-network port for receipt submissions.
+- The receipt-note composer and its Send Note dialog are implemented in `site/desktop.js`; its scalable blank paper recreates the supplied note's 1-bit frame in CSS because `note.png` contains baked-in example copy, while its top-right and resize-corner sprites are native 2× crops of that asset. Turnstile is loaded only when the send dialog opens.
 
 ## Efficient workflow
 

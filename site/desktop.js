@@ -147,6 +147,132 @@
     body.append(documentBody);
   }
 
+  function resizeReceiptNote(note) {
+    const windowElement = note.closest('.receipt-note-window');
+    const paper = note.closest('.receipt-note-paper');
+    const minHeight = 112;
+    note.style.height = 'auto';
+    const noteHeight = Math.max(minHeight, note.scrollHeight);
+    note.style.height = noteHeight + 'px';
+    const previousPaperHeight = paper.style.height;
+    paper.style.height = 'auto';
+    const frameHeight = paper.offsetHeight - note.offsetHeight;
+    paper.style.height = previousPaperHeight;
+    const requiredHeight = noteHeight + frameHeight;
+    windowElement.style.height = Math.max(windowElement.offsetHeight, requiredHeight) + 'px';
+  }
+
+  function renderReceiptNote(body) {
+    body.classList.add('receipt-note-body');
+    const paper = element('div', 'receipt-note-paper');
+    const close = element('button', 'receipt-note-close');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close Message Slip');
+    close.addEventListener('click', () => closeWindow('note'));
+    const resizeGrip = element('span', 'receipt-note-resize-grip');
+    resizeGrip.setAttribute('aria-hidden', 'true');
+    const dragHandle = element('div', 'receipt-note-drag-handle');
+    dragHandle.setAttribute('aria-hidden', 'true');
+    const note = element('textarea', 'receipt-note-text');
+    note.maxLength = window.receiptNoteMaxCharacters || 1000;
+    note.placeholder = '';
+    note.setAttribute('aria-label', 'Your note');
+    note.rows = 6;
+    const count = element('span', 'receipt-note-count');
+    const send = element('button', 'receipt-note-send', 'Send');
+    send.type = 'button';
+    send.addEventListener('click', () => openWindow('receipt-send'));
+    const update = () => {
+      count.textContent = note.value.length + ' / ' + note.maxLength;
+      resizeReceiptNote(note);
+      moveWindow(paper.closest('.window'), paper.closest('.window').offsetLeft, paper.closest('.window').offsetTop);
+    };
+    note.addEventListener('input', update);
+    paper.append(dragHandle, close, resizeGrip, note, count, send);
+    body.append(paper);
+    requestAnimationFrame(update);
+  }
+
+  function loadTurnstile() {
+    if (window.turnstile) return Promise.resolve(window.turnstile);
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-turnstile-api]');
+      if (existing) {
+        existing.addEventListener('load', () => resolve(window.turnstile), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Could not load the anti-spam check.')), { once: true });
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.dataset.turnstileApi = 'true';
+      script.addEventListener('load', () => resolve(window.turnstile), { once: true });
+      script.addEventListener('error', () => reject(new Error('Could not load the anti-spam check.')), { once: true });
+      document.head.append(script);
+    });
+  }
+
+  function renderReceiptSend(body) {
+    body.classList.add('receipt-send-body');
+    const form = element('form', 'receipt-send-form');
+    const message = element('p', 'receipt-send-message', 'Complete the anti-spam check to print your note!');
+    const checkLabel = element('p', 'receipt-check-label');
+    const check = element('div', 'receipt-turnstile');
+    const status = element('p', 'receipt-send-status');
+    status.setAttribute('role', 'status');
+    const send = element('button', 'image-button receipt-submit', 'Send');
+    send.type = 'submit';
+    send.disabled = true;
+    form.append(message, check, status, send);
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const note = windows.get('note')?.querySelector('.receipt-note-text')?.value || '';
+      const token = check.dataset.token;
+      send.disabled = true;
+      status.textContent = 'Queuing note…';
+      try {
+        await window.submitReceiptNote(note, token);
+        status.textContent = 'Note queued for printing.';
+        const cleared = windows.get('note')?.querySelector('.receipt-note-text');
+        if (cleared) {
+          cleared.value = '';
+          cleared.dispatchEvent(new Event('input'));
+        }
+        message.textContent = 'Your note has been queued for the receipt printer.';
+        check.hidden = true;
+        checkLabel.hidden = true;
+        send.hidden = true;
+      } catch (error) {
+        status.textContent = error.message;
+        send.disabled = !check.dataset.token;
+        if (window.turnstile && check.dataset.widgetId !== undefined) {
+          window.turnstile.reset(check.dataset.widgetId);
+          delete check.dataset.token;
+        }
+      }
+    });
+    const config = window.receiptNoteConfig || {};
+    if (!config.turnstileSiteKey) {
+      status.textContent = 'Receipt notes are not configured yet.';
+      return body.append(form);
+    }
+    loadTurnstile().then(turnstile => {
+      check.dataset.widgetId = turnstile.render(check, {
+        sitekey: config.turnstileSiteKey,
+        callback: token => {
+          check.dataset.token = token;
+          send.disabled = false;
+        },
+        'expired-callback': () => {
+          delete check.dataset.token;
+          send.disabled = true;
+        },
+        'error-callback': () => { status.textContent = 'The anti-spam check could not load. Please try again.'; }
+      });
+    }).catch(error => { status.textContent = error.message; });
+    body.append(form);
+  }
+
   function sheet(photos) {
     const grid = element('div', 'contact-sheet');
     photos.forEach((photo, index) => {
@@ -379,6 +505,8 @@
     render: body => renderVideo(body, video)
   }));
   define('viewer', { title: 'Photo Viewer', width: 640, height: 465, render: renderViewer });
+  define('note', { title: 'Message Slip', width: 290, height: 142, className: 'receipt-note-window', render: renderReceiptNote });
+  define('receipt-send', { title: 'Print Note', status: '', context: 'Anti-Spam Check', width: 390, height: 260, className: 'receipt-send-window', render: renderReceiptSend });
   content.projects.forEach(project => define(project.id, {
     title: project.name, status: 'Embedded systems', context: countLabel(project.parts.length, 'repository', 'repositories'),
     width: 610, height: 485, render: body => renderProject(body, project)
@@ -497,6 +625,7 @@
       if (!entry) return;
       win = template.content.firstElementChild.cloneNode(true);
       win.dataset.window = id;
+      if (entry.className) win.classList.add(entry.className);
       win.style.setProperty('--window-width', entry.width + 'px');
       win.style.setProperty('--window-height', entry.height + 'px');
       const title = win.querySelector('h2');
@@ -536,6 +665,7 @@
   function closeWindow(id) {
     const win = windows.get(id);
     if (!win) return;
+    if (id === 'note') closeWindow('receipt-send');
     if (id === 'viewer') windows.get('photos')?.classList.remove('viewer-underlay');
     const wasActive = win === activeWindow;
     if (win.contains(selected?.button)) clearSelection();
@@ -554,9 +684,9 @@
   }
 
   function bindWindow(win, id) {
-    const titlebar = win.querySelector('.titlebar');
+    const titlebar = win.querySelector('.receipt-note-drag-handle') || win.querySelector('.titlebar');
     const zoom = win.querySelector('.zoom-box');
-    const grip = win.querySelector('.window-footer i');
+    const grip = win.querySelector('.receipt-note-resize-grip') || win.querySelector('.window-footer i');
     let drag;
     let resize;
     let restore;
@@ -749,7 +879,8 @@
   desktopPersonalItems.append(
     windowItem('photos', 'Media', 'disk'),
     item('Instagram', 'instagram', () => window.open(content.instagram, '_blank', 'noopener,noreferrer')),
-    item('Spotify', 'spotify', () => window.open(content.spotify, '_blank', 'noopener,noreferrer'))
+    item('Spotify', 'spotify', () => window.open(content.spotify, '_blank', 'noopener,noreferrer')),
+    windowItem('note', 'Message Slip', 'notepad')
   );
   document.querySelector('.menus a').href = content.github;
   updateClock();

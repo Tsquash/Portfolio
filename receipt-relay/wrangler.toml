@@ -7,4 +7,4 @@ compatibility_date = "2026-11-18"
 [[d1_databases]]
 binding = "DB"
 database_name = "portfolio-receipt-relay"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "c6ecc178-6b41-4701-9764-3106d790a80c"
