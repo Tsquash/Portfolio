@@ -6,7 +6,7 @@ Read this first. This is the durable operating guide for agents working on the p
 
 - Dependency-free static site in `site/`; no package manager, framework, build step, or automated test suite.
 - Classic monochrome Macintosh desktop UI. It boots on a visitor's first load in a browser session, then restores open windows, positions, sizes, view mode, and photo state from `sessionStorage`.
-- Desktop and menu items expose Projects, Welcome/About, Resume, GitHub, LinkedIn, Media, Instagram, Spotify, and a Message Slip receipt-note composer. Special → Send a Note… opens the same composer.
+- Desktop and menu items expose Projects, Welcome/About, Resume, GitHub, LinkedIn, Media, Instagram, Spotify, and a Note Print receipt-note composer. Special → Send a Note… opens the same composer.
 - Current content is one Air Quality Monitor project, six generated photo albums (51 images), and two native-video-player windows (`Monadnock.mp4` and `Dandelion.mp4`).
 - Mouse users select with one click and open with two; touch and keyboard activation open with one action.
 - At widths up to 700 px, windows use the compact/mobile layout and only the active window is normally visible.

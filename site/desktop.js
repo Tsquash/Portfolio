@@ -167,7 +167,7 @@
     const paper = element('div', 'receipt-note-paper');
     const close = element('button', 'receipt-note-close');
     close.type = 'button';
-    close.setAttribute('aria-label', 'Close Message Slip');
+    close.setAttribute('aria-label', 'Close Note Print');
     close.addEventListener('click', () => closeWindow('note'));
     const resizeGrip = element('span', 'receipt-note-resize-grip');
     resizeGrip.setAttribute('aria-hidden', 'true');
@@ -503,7 +503,7 @@
     render: body => renderVideo(body, video)
   }));
   define('viewer', { title: 'Photo Viewer', width: 640, height: 465, render: renderViewer });
-  define('note', { title: 'Message Slip', width: 290, height: 142, className: 'receipt-note-window', render: renderReceiptNote });
+  define('note', { title: 'Note Print', width: 290, height: 142, className: 'receipt-note-window', render: renderReceiptNote });
   define('receipt-send', { title: 'Print Note', status: '', context: 'Anti-Spam Check', width: 390, height: 260, className: 'receipt-send-window', render: renderReceiptSend });
   content.projects.forEach(project => define(project.id, {
     title: project.name, status: 'Embedded systems', context: countLabel(project.parts.length, 'repository', 'repositories'),
@@ -878,7 +878,7 @@
     windowItem('photos', 'Media', 'disk'),
     item('Instagram', 'instagram', () => window.open(content.instagram, '_blank', 'noopener,noreferrer')),
     item('Spotify', 'spotify', () => window.open(content.spotify, '_blank', 'noopener,noreferrer')),
-    windowItem('note', 'Message Slip', 'notepad')
+    windowItem('note', 'Note Print', 'notepad')
   );
   document.querySelector('.menus a').href = content.github;
   updateClock();
