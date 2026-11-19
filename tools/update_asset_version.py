@@ -14,6 +14,7 @@ ASSETS = (
     "assets/fonts/ChicagoFLF.woff2",
     "desktop.css",
     "photo-albums.js",
+    "projects.js",
     "content.js",
     "receipt-note-config.js",
     "receipt-note-client.js",

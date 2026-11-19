@@ -303,9 +303,18 @@ img { display: block; max-width: 100%; }
 .bio-copy p:last-child { margin-bottom: 0; }
 
 .document { padding: 22px; }
+.document h1 { font-size: clamp(21px, 3vw, 27px); margin: 0 0 14px; letter-spacing: 0; }
+.document h2 { font-size: 17px; margin: 24px 0 7px; }
 .document h3 { font-size: clamp(19px, 3vw, 25px); margin: 0 0 10px; letter-spacing: 0; }
 .document h4 { font-size: 15px; margin: 0 0 5px; }
 .document section { border-top: 1px dotted var(--ink); padding-top: 12px; margin-top: 14px; }
+.project-document ul, .project-document ol { margin: 0 0 14px; padding-left: 24px; }
+.project-document li { margin: 0 0 4px; }
+.project-document code { padding: 1px 3px; border: 1px solid var(--ink); font: 12px/1.2 var(--type); }
+.project-document hr { border: 0; border-top: 1px dotted var(--ink); margin: 18px 0; }
+.project-figure { margin: 18px 0; }
+.project-image { display: block; max-width: min(100%, 640px); height: auto; border: 1px solid var(--ink); }
+.project-figure figcaption { margin-top: 5px; font-size: 12px; }
 .repo-link { font: 700 13px/1.35 var(--type); text-underline-offset: 3px; }
 .tag-list { list-style: none; display: flex; flex-wrap: wrap; gap: 5px; padding: 0; margin: 15px 0 0; }
 .tag-list li { border: 1px solid var(--ink); padding: 3px 6px; font-size: 12px; }

@@ -19,26 +19,8 @@ window.portfolioContent = {
     { id: 'monadnock.mv', name: 'Monadnock.mp4', src: 'assets/monadnock.mp4' },
     { id: 'dandelion.mv', name: 'Dandelion.mp4', src: 'assets/dandelion.mp4' }
   ],
-  projects: [
-    {
-      id: 'air-quality',
-      name: 'Air Quality Monitor',
-      summary: 'Two ESP32-C6 devices work together to measure indoor air quality and publish the readings to a Matter controller.',
-      parts: [
-        {
-          name: 'AirQualityMonitor',
-          detail: 'The main monitor measures CO₂, temperature, humidity, VOC, and NOₓ, shows current readings and recent history on an e-paper display, and publishes measurements over Matter via Wi-Fi.',
-          url: 'https://github.com/Tsquash/AirQualityMonitor'
-        },
-        {
-          name: 'particle',
-          detail: 'The companion unit measures PM1.0, PM2.5, and PM10. It can display readings on its own e-paper screen and send one-minute averages to the main monitor over Bluetooth Low Energy.',
-          url: 'https://github.com/Tsquash/particle/tree/main'
-        }
-      ],
-      tags: ['ESP32-C6', 'Matter', 'BLE', 'E-paper', 'KiCad']
-    }
-  ],
+  /* Generated from the project folders in assets/Projects. */
+  projects: window.portfolioProjects || [],
   /* Generated from the subfolders in assets/Photos. */
   albums: window.portfolioPhotoAlbums || []
 };

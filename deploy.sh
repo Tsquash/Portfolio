@@ -4,6 +4,7 @@ cd "$(dirname "$0")"
 
 python3 tools/update_asset_version.py
 python3 tools/generate_photo_albums.py
+python3 tools/generate_projects.py
 
 if ! command -v lftp >/dev/null 2>&1; then
   echo 'Install lftp first: brew install lftp' >&2

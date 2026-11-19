@@ -92,14 +92,6 @@
     return wrapper;
   }
 
-  function githubLink(url, label) {
-    const link = element('a', 'repo-link', label + ' ↗');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    return link;
-  }
-
   function finderGrid(className = '') {
     const grid = element('div', 'finder-grid ' + className);
     grid.classList.toggle('list-view', listView);
@@ -116,7 +108,7 @@
 
   function renderProjects(body) {
     const grid = finderGrid();
-    content.projects.forEach(project => grid.append(windowItem(project.id, project.name, 'folder')));
+    content.projects.forEach(project => grid.append(windowItem(project.id, project.name, 'document')));
     body.append(grid);
   }
 
@@ -139,17 +131,131 @@
     body.append(layout);
   }
 
+  function projectAssetUrl(project, path) {
+    const cleanPath = path.trim();
+    if (!cleanPath || /^(?:[a-z][a-z0-9+.-]*:|\/\/|\/)/i.test(cleanPath)) return '';
+    const parts = cleanPath.split('/');
+    if (parts.some(part => !part || part === '.' || part === '..')) return '';
+    return assetUrl(project.assetBase + '/' + parts.map(part => encodeURIComponent(part)).join('/'));
+  }
+
+  function safeLinkUrl(url) {
+    try {
+      const parsed = new URL(url, window.location.href);
+      return /^(?:https?:|mailto:)$/i.test(parsed.protocol) ? parsed.href : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function appendInline(container, source, project) {
+    const token = /!\[([^\]]*)\]\(([^)\s]+)\)|\[([^\]]+)\]\(([^)\s]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/g;
+    let position = 0;
+    let match;
+    while ((match = token.exec(source))) {
+      if (match.index > position) container.append(document.createTextNode(source.slice(position, match.index)));
+      if (match[1] !== undefined) {
+        const src = projectAssetUrl(project, match[2]);
+        if (src) {
+          const image = element('img', 'project-image pixelated');
+          image.src = src;
+          image.alt = match[1];
+          image.loading = 'lazy';
+          container.append(image);
+        } else {
+          container.append(document.createTextNode(match[0]));
+        }
+      } else if (match[3] !== undefined) {
+        const href = safeLinkUrl(match[4]);
+        if (href) {
+          const link = element('a', 'repo-link');
+          link.href = href;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          appendInline(link, match[3], project);
+          link.append(document.createTextNode(' ↗'));
+          container.append(link);
+        } else {
+          container.append(document.createTextNode(match[3]));
+        }
+      } else if (match[5] !== undefined) {
+        container.append(element('code', '', match[5]));
+      } else {
+        const emphasis = element(match[6] !== undefined || match[7] !== undefined ? 'strong' : 'em');
+        appendInline(emphasis, match[6] ?? match[7] ?? match[8] ?? match[9], project);
+        container.append(emphasis);
+      }
+      position = token.lastIndex;
+    }
+    if (position < source.length) container.append(document.createTextNode(source.slice(position)));
+  }
+
+  function projectImage(project, alt, path) {
+    const src = projectAssetUrl(project, path);
+    if (!src) return undefined;
+    const figure = element('figure', 'project-figure');
+    const image = element('img', 'project-image pixelated');
+    image.src = src;
+    image.alt = alt;
+    image.loading = 'lazy';
+    figure.append(image);
+    if (alt) figure.append(element('figcaption', '', alt));
+    return figure;
+  }
+
   function renderProject(body, project) {
-    const documentBody = element('article', 'document');
-    documentBody.append(element('h3', '', project.name), element('p', 'copy', project.summary));
-    project.parts.forEach(part => {
-      const section = element('section', 'copy');
-      section.append(element('h4', '', part.name), element('p', '', part.detail), githubLink(part.url, 'View ' + part.name + ' on GitHub'));
-      documentBody.append(section);
-    });
-    const tags = element('ul', 'tag-list');
-    project.tags.forEach(tag => tags.append(element('li', '', tag)));
-    documentBody.append(tags);
+    const documentBody = element('article', 'document project-document');
+    const lines = project.markdown.replace(/\r\n?/g, '\n').split('\n');
+    const heading = /^(#{1,3})\s+(.+?)\s*$/;
+    const image = /^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
+    const unordered = /^[-*]\s+(.+)$/;
+    const ordered = /^\d+\.\s+(.+)$/;
+    let index = 0;
+
+    while (index < lines.length) {
+      const line = lines[index];
+      if (!line.trim()) {
+        index += 1;
+        continue;
+      }
+      const headingMatch = line.match(heading);
+      const imageMatch = line.match(image);
+      if (headingMatch) {
+        const node = element('h' + headingMatch[1].length);
+        appendInline(node, headingMatch[2], project);
+        documentBody.append(node);
+        index += 1;
+      } else if (imageMatch) {
+        const figure = projectImage(project, imageMatch[1], imageMatch[2]);
+        if (figure) documentBody.append(figure);
+        index += 1;
+      } else if (/^---+\s*$/.test(line)) {
+        documentBody.append(element('hr'));
+        index += 1;
+      } else if (unordered.test(line) || ordered.test(line)) {
+        const isOrdered = ordered.test(line);
+        const list = element(isOrdered ? 'ol' : 'ul');
+        const matcher = isOrdered ? ordered : unordered;
+        while (index < lines.length) {
+          const itemMatch = lines[index].match(matcher);
+          if (!itemMatch) break;
+          const listItem = element('li');
+          appendInline(listItem, itemMatch[1], project);
+          list.append(listItem);
+          index += 1;
+        }
+        documentBody.append(list);
+      } else {
+        const paragraph = [];
+        while (index < lines.length && lines[index].trim() && !heading.test(lines[index]) && !image.test(lines[index]) && !unordered.test(lines[index]) && !ordered.test(lines[index]) && !/^---+\s*$/.test(lines[index])) {
+          paragraph.push(lines[index].trim());
+          index += 1;
+        }
+        const node = element('p', 'copy');
+        appendInline(node, paragraph.join(' '), project);
+        documentBody.append(node);
+      }
+    }
     body.append(documentBody);
   }
 
@@ -518,8 +624,8 @@
   define('note', { title: 'Note Print', width: 290, height: 142, className: 'receipt-note-window', render: renderReceiptNote });
   define('receipt-send', { title: 'Print Note', status: '', context: 'Anti-Spam Check', width: 390, height: 232, className: 'receipt-send-window', render: renderReceiptSend });
   content.projects.forEach(project => define(project.id, {
-    title: project.name, status: 'Embedded systems', context: countLabel(project.parts.length, 'repository', 'repositories'),
-    width: 610, height: 485, render: body => renderProject(body, project)
+    title: project.name, context: 'SimpleText', width: 730, height: 660,
+    render: body => renderProject(body, project)
   }));
 
   function saveDesktopState() {
