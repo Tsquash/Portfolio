@@ -1,0 +1,10 @@
+name = "portfolio-receipt-relay"
+main = "src/worker.js"
+compatibility_date = "2026-11-18"
+
+# Create the database first, then replace the placeholder with its ID:
+#   npx wrangler d1 create portfolio-receipt-relay
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio-receipt-relay"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

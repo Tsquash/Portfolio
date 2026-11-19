@@ -1,2 +1,5 @@
 .DS_Store
 caleblightfoot.space.enc/
+receipt-relay/.wrangler/
+receipt-relay/node_modules/
+receipt-relay/.dev.vars

@@ -57,6 +57,11 @@ Window content is implemented by `render*` functions and registered with `define
 
 Preserve keyboard operation, coarse-pointer behavior, focus handling, window bounds, and the mobile rules when changing interactions. Test both sides of the 700 px breakpoint.
 
+# Portfolio durable notes
+
+- The optional receipt-note feature is split from the static site: `receipt-relay/` contains a Cloudflare Worker/D1 relay and Pi poller reference. `site/receipt-note-client.js` exposes `window.submitReceiptNote(note, turnstileToken)` for UI code, while `site/receipt-note-config.js` holds only public Worker URL and Turnstile site-key configuration.
+- Never place Pi or Worker secret values in `site/`. The Pi must poll the relay outbound over HTTPS; do not open a home-network port for receipt submissions.
+
 ## Efficient workflow
 
 1. Run `git status --short`; preserve unrelated and pre-existing user changes.
