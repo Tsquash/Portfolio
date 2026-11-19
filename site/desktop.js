@@ -11,6 +11,7 @@
   const compact = matchMedia('(max-width: 700px)');
   const touch = matchMedia('(pointer: coarse)');
   const desktopStateKey = 'macintosh-portfolio-desktop-v1';
+  const assetVersion = document.documentElement.dataset.assetVersion;
   const startupScreen = document.querySelector('#startup-screen');
   const windows = new Map();
   const definitions = new Map();
@@ -19,6 +20,11 @@
   let listView = false;
   let viewer;
   let restoringDesktop = false;
+
+  function assetUrl(path) {
+    if (!assetVersion || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(path)) return path;
+    return path + (path.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(assetVersion);
+  }
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -31,7 +37,7 @@
     const wrapper = element('span', 'item-icon item-icon-' + kind);
     wrapper.setAttribute('aria-hidden', 'true');
     const image = element('img');
-    image.src = 'assets/icons/' + kind + '.png';
+    image.src = assetUrl('assets/icons/' + kind + '.png');
     image.alt = '';
     image.draggable = false;
     wrapper.append(image);
@@ -118,7 +124,7 @@
     const layout = element('div', 'about-layout');
     const figure = element('figure', 'portrait');
     const portrait = element('img');
-    portrait.src = content.portrait.src;
+    portrait.src = assetUrl(content.portrait.src);
     portrait.alt = content.portrait.alt;
     figure.append(portrait);
     if (content.portrait.caption) figure.append(element('figcaption', '', content.portrait.caption));
@@ -277,7 +283,7 @@
       const button = element('button', 'photo-tile');
       button.type = 'button';
       const thumbnail = element('img', photo.pixelated ? 'pixelated' : '');
-      thumbnail.src = photo.thumbnail || photo.src;
+      thumbnail.src = assetUrl(photo.thumbnail || photo.src);
       thumbnail.alt = photo.alt || '';
       thumbnail.loading = 'lazy';
       thumbnail.draggable = false;
@@ -357,14 +363,14 @@
     player.controls = true;
     player.playsInline = true;
     player.preload = 'metadata';
-    player.src = video.src;
+    player.src = assetUrl(video.src);
     player.setAttribute('aria-label', video.name);
     const message = element('p', 'video-error', 'This video could not be played. Try opening it directly below.');
     message.hidden = true;
     message.setAttribute('role', 'status');
     player.addEventListener('error', () => { message.hidden = false; });
     const link = element('a', 'video-link', '');
-    link.href = video.src;
+    link.href = assetUrl(video.src);
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     body.append(player, message, link);
@@ -465,7 +471,7 @@
     const { index, photos } = viewer;
     const photo = photos[index];
     const image = win.querySelector('.viewer-body img');
-    image.src = photo.src;
+    image.src = assetUrl(photo.src);
     if (image.complete) sizeViewerToImage(image);
     image.alt = photo.alt || '';
     image.classList.toggle('pixelated', Boolean(photo.pixelated));
@@ -487,12 +493,12 @@
     render: body => {
       body.classList.add('resume-body');
       const link = document.createElement('a');
-      link.href = 'assets/resume.pdf';
+      link.href = assetUrl('assets/resume.pdf');
       link.target = '_blank';
       link.rel = 'noopener';
       link.textContent = 'Open PDF in a new tab';
       const reader = document.createElement('iframe');
-      reader.src = 'assets/resume.pdf';
+      reader.src = assetUrl('assets/resume.pdf');
       reader.title = content.name + '’s résumé';
       body.append(link, reader);
     }

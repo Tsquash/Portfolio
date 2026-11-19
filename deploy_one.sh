@@ -7,6 +7,11 @@ if (($# == 0)); then
   exit 1
 fi
 
+python3 tools/update_asset_version.py
+if [[ " $* " != *" index.html "* ]]; then
+  set -- "$@" index.html
+fi
+
 if ! command -v lftp >/dev/null 2>&1; then
   echo 'Install lftp first: brew install lftp' >&2
   exit 1
