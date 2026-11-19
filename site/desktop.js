@@ -229,16 +229,14 @@
       const note = windows.get('note')?.querySelector('.receipt-note-text')?.value || '';
       const token = check.dataset.token;
       send.disabled = true;
-      status.textContent = 'Queuing note…';
       try {
         await window.submitReceiptNote(note, token);
-        status.textContent = 'Note queued for printing.';
         const cleared = windows.get('note')?.querySelector('.receipt-note-text');
         if (cleared) {
           cleared.value = '';
           cleared.dispatchEvent(new Event('input'));
         }
-        message.textContent = 'Your note has been queued for the receipt printer.';
+        message.textContent = 'Your note has been sent to the receipt printer.';
         check.hidden = true;
         checkLabel.hidden = true;
         send.hidden = true;
